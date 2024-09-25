@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@font-face {
+    font-family: 'K24KurdishBold';
+    src: url('./fonts/K24KurdishBold-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+  }
+  
+@font-face {
+    font-family: 'K24KurdishBold';
+    src: url('./fonts/NRT-Reg.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+  
