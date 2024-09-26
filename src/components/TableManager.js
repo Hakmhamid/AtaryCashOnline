@@ -27,7 +27,7 @@ const TableManager = () => {
 
   const startSession = async (id) => {
     const hourlyCharge = parseFloat(charges[id]) || 0;
-  
+
     if (hourlyCharge >= 0) {
       // Make the API call to start the session
       await axios.post(`https://carshopcash-production.up.railway.app/api/tables/${id}/start`);
@@ -35,30 +35,29 @@ const TableManager = () => {
       // Use the current time as start time
       const startTime = new Date();
       console.log(`Session started for table ${id} at:`, startTime);
-  
-      // Reset elapsed time to "0h 0m 0s"
+
+      // Reset elapsed time to "0:0:0s"
       setElapsedTimes((prevTimes) => ({
         ...prevTimes,
-        [id]: "0h 0m 0s", // Initialize to 0 when starting
+        [id]: "0:0:0s", // Initialize to 0 when starting
       }));
-  
+
       // Clear any existing interval for this table
       clearInterval(timers[id]);
-  
+
       // Set new timer
       const intervalId = setInterval(() => updateElapsedTime(id, startTime), 1000);
       setTimers((prevTimers) => ({
         ...prevTimers,
         [id]: intervalId,
       }));
-  
+
       // Optionally, you can call fetchTables() if you want to refresh the list of tables
       fetchTables();
     } else {
       console.warn(`Invalid hourly charge for table ${id}:`, hourlyCharge);
     }
   };
-  
 
   const updateElapsedTime = (id, startTime) => {
     const now = new Date();
@@ -71,7 +70,7 @@ const TableManager = () => {
 
     setElapsedTimes((prevTimes) => ({
       ...prevTimes,
-      [id]: `${elapsedHours}h ${elapsedMinutes}m ${elapsedSeconds}s`,
+      [id]: `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`, // Updated format
     }));
   };
 
@@ -199,7 +198,7 @@ const TableManager = () => {
                 <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 text-center w-full">
                   <h3 className="text-lg font-k24kurdish">کاتژمێر</h3>
                   <p className="text-2xl font-bold text-blue-600">
-                    {elapsedTimes[table.id] || "0h 0m 0s"}
+                    {elapsedTimes[table.id] || "0:0:0s"} {/* Updated format */}
                   </p>
                 </div>
                 <button
