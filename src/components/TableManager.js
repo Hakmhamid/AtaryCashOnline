@@ -30,27 +30,32 @@ const TableManager = () => {
     const hourlyCharge = parseFloat(charges[id]) || 0;
 
     if (hourlyCharge >= 0) {
-      const response = await axios.post(
-        `https://carshopcash-production.up.railway.app/api/tables/${id}/start`
-      );
-      const table = response.data.table;
-
-      if (table.startTime) {
-        const startTime = new Date(table.startTime);
-        clearInterval(timers[id]);
-        const intervalId = setInterval(
-          () => updateElapsedTime(id, startTime),
-          1000
+        const response = await axios.post(
+            `https://carshopcash-production.up.railway.app/api/tables/${id}/start`
         );
-        setTimers((prevTimers) => ({
-          ...prevTimers,
-          [id]: intervalId,
-        }));
-      }
+        const table = response.data.table;
 
-      fetchTables();
+        if (table.startTime) {
+            const startTime = new Date(table.startTime);
+            setElapsedTimes((prevTimes) => ({
+                ...prevTimes,
+                [id]: "0h 0m 0s", // Initialize to 0 when starting
+            }));
+            clearInterval(timers[id]);
+            const intervalId = setInterval(
+                () => updateElapsedTime(id, startTime),
+                1000
+            );
+            setTimers((prevTimers) => ({
+                ...prevTimers,
+                [id]: intervalId,
+            }));
+        }
+
+        fetchTables();
     }
-  };
+};
+
 
   const updateElapsedTime = (id, startTime) => {
     const now = new Date();
