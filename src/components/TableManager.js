@@ -4,14 +4,62 @@ import "./TableManager.css"; // Uncomment if you have custom styles
 
 const TableManager = () => {
   const [tables, setTables] = useState([]);
-  const [timers, setTimers] = useState({});
-  const [elapsedTimes, setElapsedTimes] = useState({});
-  const [charges, setCharges] = useState({});
-  const [totalCharges, setTotalCharges] = useState({});
+  const [elapsedTimes, setElapsedTimes] = useState(() => {
+    const savedElapsedTimes = localStorage.getItem('elapsedTimes');
+    return savedElapsedTimes ? JSON.parse(savedElapsedTimes) : {};
+  });
+  const [startTimes, setStartTimes] = useState(() => {
+    const savedStartTimes = localStorage.getItem('startTimes');
+    return savedStartTimes ? JSON.parse(savedStartTimes) : {};
+  });
+  const [charges, setCharges] = useState(() => {
+    const savedCharges = localStorage.getItem('charges');
+    return savedCharges ? JSON.parse(savedCharges) : {};
+  });
+  const [totalCharges, setTotalCharges] = useState(() => {
+    const savedTotalCharges = localStorage.getItem('totalCharges');
+    return savedTotalCharges ? JSON.parse(savedTotalCharges) : {};
+  });
+  const [sessionEnded, setSessionEnded] = useState(() => {
+    const savedSessionEnded = localStorage.getItem('sessionEnded');
+    return savedSessionEnded ? JSON.parse(savedSessionEnded) : {};
+  });
 
   useEffect(() => {
     fetchTables();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('charges', JSON.stringify(charges));
+  }, [charges]);
+
+  useEffect(() => {
+    localStorage.setItem('totalCharges', JSON.stringify(totalCharges));
+  }, [totalCharges]);
+
+  useEffect(() => {
+    localStorage.setItem('sessionEnded', JSON.stringify(sessionEnded));
+  }, [sessionEnded]);
+
+  useEffect(() => {
+    localStorage.setItem('elapsedTimes', JSON.stringify(elapsedTimes));
+  }, [elapsedTimes]);
+
+  useEffect(() => {
+    localStorage.setItem('startTimes', JSON.stringify(startTimes));
+  }, [startTimes]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      Object.keys(startTimes).forEach((id) => {
+        if (startTimes[id]) {
+          updateElapsedTime(id);
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [startTimes]);
 
   const fetchTables = async () => {
     const response = await axios.get("https://carshopcash-production.up.railway.app/api/tables");
@@ -29,53 +77,41 @@ const TableManager = () => {
     const hourlyCharge = parseFloat(charges[id]) || 0;
 
     if (hourlyCharge >= 0) {
-      // Make the API call to start the session
       await axios.post(`https://carshopcash-production.up.railway.app/api/tables/${id}/start`);
-      
-      // Use the current time as start time
       const startTime = new Date();
-      console.log(`Session started for table ${id} at:`, startTime);
-
-      // Reset elapsed time to "0:0:0s"
+      setStartTimes((prev) => ({ ...prev, [id]: startTime }));
       setElapsedTimes((prevTimes) => ({
         ...prevTimes,
-        [id]: "0:0:0s", // Initialize to 0 when starting
+        [id]: "0:0:0s",
       }));
 
-      // Clear any existing interval for this table
-      clearInterval(timers[id]);
-
-      // Set new timer
-      const intervalId = setInterval(() => updateElapsedTime(id, startTime), 1000);
-      setTimers((prevTimers) => ({
-        ...prevTimers,
-        [id]: intervalId,
+      // Reset sessionEnded when starting the session
+      setSessionEnded((prevSessionEnded) => ({
+        ...prevSessionEnded,
+        [id]: false,
       }));
 
-      // Optionally, you can call fetchTables() if you want to refresh the list of tables
       fetchTables();
     } else {
       console.warn(`Invalid hourly charge for table ${id}:`, hourlyCharge);
     }
   };
 
-  const updateElapsedTime = (id, startTime) => {
+  const updateElapsedTime = (id) => {
     const now = new Date();
+    const startTime = new Date(startTimes[id]);
     const elapsedMilliseconds = now - startTime;
     const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
     const elapsedMinutes = Math.floor((elapsedMilliseconds / (1000 * 60)) % 60);
     const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
 
-    console.log(`Elapsed time for table ${id}: ${elapsedHours}h ${elapsedMinutes}m ${elapsedSeconds}s`);
-
     setElapsedTimes((prevTimes) => ({
       ...prevTimes,
-      [id]: `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`, // Updated format
+      [id]: `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`,
     }));
   };
 
   const endSession = async (id) => {
-    clearInterval(timers[id]);
     const hourlyCharge = parseFloat(charges[id]) || 0;
 
     const response = await axios.post(
@@ -96,15 +132,17 @@ const TableManager = () => {
       [id]: null,
     }));
 
-    setTimers((prevTimers) => ({
-      ...prevTimers,
-      [id]: null,
+    setStartTimes((prev) => ({ ...prev, [id]: null }));
+
+    // Mark the session as ended
+    setSessionEnded((prevSessionEnded) => ({
+      ...prevSessionEnded,
+      [id]: true,
     }));
 
     fetchTables();
   };
 
-  //Reset Fuction
   const resetCharge = async (id) => {
     const response = await axios.post(
       `https://carshopcash-production.up.railway.app/api/tables/${id}/reset`
@@ -126,10 +164,12 @@ const TableManager = () => {
       [id]: null,
     }));
 
-    clearInterval(timers[id]);
-    setTimers((prevTimers) => ({
-      ...prevTimers,
-      [id]: null,
+    setStartTimes((prev) => ({ ...prev, [id]: null }));
+
+    // Reset the sessionEnded flag
+    setSessionEnded((prevSessionEnded) => ({
+      ...prevSessionEnded,
+      [id]: false,
     }));
 
     fetchTables();
@@ -197,39 +237,32 @@ const TableManager = () => {
             {table.inUse ? (
               <div className="mt-4 flex flex-col items-end">
                 <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 text-center w-full">
-                  <h3 className="text-lg font-k24kurdish">کاتژمێر</h3>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {elapsedTimes[table.id] || "0:0:0s"} {/* Updated format */}
-                  </p>
+                <h3 className="text-lg font-k24kurdish">کاتژمێر</h3>
+                  <p className="text-2xl font-bold text-blue-500">{elapsedTimes[table.id] || "0:0:0s"}</p>
                 </div>
                 <button
                   onClick={() => endSession(table.id)}
-                  className="bg-red-500 text-white px-4 py-2 mt-4 rounded self-end font-k24kurdish"
+                  className="bg-red-500 text-white px-4 py-2 mt-4 rounded self-end font-k24kurdish w-full"
                 >
                   وەستاندنی کات
                 </button>
               </div>
             ) : (
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={() => startSession(table.id)}
-                  className="bg-green-500 text-white px-4 py-2 mt-4 rounded font-k24kurdish"
-                >
-                  دەست پێکردن
-                </button>
-              </div>
+              <button
+                onClick={() => startSession(table.id)}
+                className="bg-blue-500 text-white px-4 py-2 rounded w-full font-k24kurdish"
+              >
+                کاتی بەکارهێنان دەستپێبکە
+              </button>
             )}
-            {totalCharges[table.id] !== undefined && (
-              <div className="mt-4 flex flex-col items-end">
-                <button
-                  onClick={() => resetCharge(table.id)}
-                  className="bg-blue-500 text-white px-4 py-2 mt-2 rounded font-k24kurdish"
-                  disabled={table.inUse}
-                >
-                  پاککردنەوەی پارەی گشتی
-                </button>
-              </div>
-            )}
+
+            <button
+              onClick={() => resetCharge(table.id)}
+              className="bg-green-500 text-white px-4 py-2 rounded mt-4 w-full font-k24kurdish"
+              disabled={!sessionEnded[table.id]}  // Disable if session is not ended
+            >
+              تازەکردنەوەی پارە
+            </button>
           </div>
         ))}
       </div>
@@ -238,3 +271,4 @@ const TableManager = () => {
 };
 
 export default TableManager;
+
