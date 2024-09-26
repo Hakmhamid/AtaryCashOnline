@@ -104,6 +104,7 @@ const TableManager = () => {
     fetchTables();
   };
 
+  //Reset Fuction
   const resetCharge = async (id) => {
     const response = await axios.post(
       `https://carshopcash-production.up.railway.app/api/tables/${id}/reset`
