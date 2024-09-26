@@ -15,7 +15,6 @@ const TableManager = () => {
 
   const fetchTables = async () => {
     const response = await axios.get("https://carshopcash-production.up.railway.app/api/tables");
-
     setTables(response.data);
   };
 
@@ -30,32 +29,38 @@ const TableManager = () => {
     const hourlyCharge = parseFloat(charges[id]) || 0;
 
     if (hourlyCharge >= 0) {
-        const response = await axios.post(
-            `https://carshopcash-production.up.railway.app/api/tables/${id}/start`
+      const response = await axios.post(
+        `https://carshopcash-production.up.railway.app/api/tables/${id}/start`
+      );
+      const table = response.data.table;
+
+      if (table.startTime) {
+        const startTime = new Date(table.startTime);
+        console.log(`Session started for table ${id} at:`, startTime);
+
+        setElapsedTimes((prevTimes) => ({
+          ...prevTimes,
+          [id]: "0h 0m 0s", // Initialize to 0 when starting
+        }));
+
+        clearInterval(timers[id]);
+        const intervalId = setInterval(
+          () => updateElapsedTime(id, startTime),
+          1000
         );
-        const table = response.data.table;
+        setTimers((prevTimers) => ({
+          ...prevTimers,
+          [id]: intervalId,
+        }));
+      } else {
+        console.error(`No startTime returned for table ${id}`);
+      }
 
-        if (table.startTime) {
-            const startTime = new Date(table.startTime);
-            setElapsedTimes((prevTimes) => ({
-                ...prevTimes,
-                [id]: "0h 0m 0s", // Initialize to 0 when starting
-            }));
-            clearInterval(timers[id]);
-            const intervalId = setInterval(
-                () => updateElapsedTime(id, startTime),
-                1000
-            );
-            setTimers((prevTimers) => ({
-                ...prevTimers,
-                [id]: intervalId,
-            }));
-        }
-
-        fetchTables();
+      fetchTables();
+    } else {
+      console.warn(`Invalid hourly charge for table ${id}:`, hourlyCharge);
     }
-};
-
+  };
 
   const updateElapsedTime = (id, startTime) => {
     const now = new Date();
@@ -63,6 +68,8 @@ const TableManager = () => {
     const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
     const elapsedMinutes = Math.floor((elapsedMilliseconds / (1000 * 60)) % 60);
     const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
+
+    console.log(`Elapsed time for table ${id}: ${elapsedHours}h ${elapsedMinutes}m ${elapsedSeconds}s`);
 
     setElapsedTimes((prevTimes) => ({
       ...prevTimes,
@@ -81,6 +88,7 @@ const TableManager = () => {
       hourlyCharge > 0
         ? Math.round((response.data.totalCharge / 3) * hourlyCharge)
         : 0;
+
     setTotalCharges((prevCharges) => ({
       ...prevCharges,
       [id]: totalCharge,
@@ -159,9 +167,7 @@ const TableManager = () => {
 
             <div className="flex text-right justify-end gap-3">
               <p
-                className={`font-nrt text-2xl ${
-                  table.inUse ? "text-red-500" : "text-emerald-500"
-                }`}
+                className={`font-nrt text-2xl ${table.inUse ? "text-red-500" : "text-emerald-500"}`}
               >
                 {table.inUse ? "لە بەکارهێنانایە" : "بەردەستە"}
               </p>
@@ -173,22 +179,15 @@ const TableManager = () => {
                 {totalCharges[table.id] !== undefined
                   ? `  ${formatCharge(totalCharges[table.id])} دینار`
                   : "٠"}{" "}
-              </p>{" "}
-              {/* Total Charge Label */}
-              <span className="font-k24kurdish text-cyan-500 text-2xl font-bold">
-                : کۆی گشتی پارە
-              </span>
+              </p>
+              <span className="font-k24kurdish text-cyan-500 text-2xl font-bold">: کۆی گشتی پارە</span>
             </div>
 
-            {/* Input for hourly charge */}
             <div className="mb-4">
-              {/* Input Label */}
-              <h3 className="text-2xl mb-2 text-right font-k24kurdish text-blue-600">
-                : کات
-              </h3>
+              <h3 className="text-2xl mb-2 text-right font-k24kurdish text-blue-600">: کات</h3>
               <input
                 type="number"
-                dir="rtl" // Allow Arabic input
+                dir="rtl"
                 className="border rounded w-full py-2 px-3 text-gray-700 font-nrt text-right"
                 value={charges[table.id] || ""}
                 onChange={(e) => handleChargeChange(table.id, e.target.value)}
@@ -227,7 +226,7 @@ const TableManager = () => {
                 <button
                   onClick={() => resetCharge(table.id)}
                   className="bg-blue-500 text-white px-4 py-2 mt-2 rounded font-k24kurdish"
-                  disabled={table.inUse} // Disable when session is active
+                  disabled={table.inUse}
                 >
                   پاککردنەوەی پارەی گشتی
                 </button>
@@ -241,3 +240,4 @@ const TableManager = () => {
 };
 
 export default TableManager;
+
