@@ -29,11 +29,9 @@ const TableManager = () => {
     const hourlyCharge = parseFloat(charges[id]) || 0;
   
     if (hourlyCharge >= 0) {
-      const response = await axios.post(
-        `https://carshopcash-production.up.railway.app/api/tables/${id}/start`
-      );
-      const table = response.data.table;
-  
+      // Make the API call to start the session
+      await axios.post(`https://carshopcash-production.up.railway.app/api/tables/${id}/start`);
+      
       // Use the current time as start time
       const startTime = new Date();
       console.log(`Session started for table ${id} at:`, startTime);
@@ -54,21 +52,23 @@ const TableManager = () => {
         [id]: intervalId,
       }));
   
+      // Optionally, you can call fetchTables() if you want to refresh the list of tables
       fetchTables();
     } else {
       console.warn(`Invalid hourly charge for table ${id}:`, hourlyCharge);
     }
   };
   
+
   const updateElapsedTime = (id, startTime) => {
     const now = new Date();
     const elapsedMilliseconds = now - startTime;
     const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
     const elapsedMinutes = Math.floor((elapsedMilliseconds / (1000 * 60)) % 60);
     const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
-  
+
     console.log(`Elapsed time for table ${id}: ${elapsedHours}h ${elapsedMinutes}m ${elapsedSeconds}s`);
-  
+
     setElapsedTimes((prevTimes) => ({
       ...prevTimes,
       [id]: `${elapsedHours}h ${elapsedMinutes}m ${elapsedSeconds}s`,
