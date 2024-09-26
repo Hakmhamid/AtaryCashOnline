@@ -252,7 +252,8 @@ const TableManager = () => {
                 onClick={() => startSession(table.id)}
                 className="bg-blue-500 text-white px-4 py-2 rounded w-full font-k24kurdish"
               >
-                کاتی بەکارهێنان دەستپێبکە
+                دەست پێکردن
+
               </button>
             )}
 
@@ -261,7 +262,7 @@ const TableManager = () => {
               className="bg-green-500 text-white px-4 py-2 rounded mt-4 w-full font-k24kurdish"
               disabled={!sessionEnded[table.id]}  // Disable if session is not ended
             >
-              تازەکردنەوەی پارە
+             پاککردنەوەی پارەی
             </button>
           </div>
         ))}
