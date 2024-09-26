@@ -27,50 +27,48 @@ const TableManager = () => {
 
   const startSession = async (id) => {
     const hourlyCharge = parseFloat(charges[id]) || 0;
-
+  
     if (hourlyCharge >= 0) {
       const response = await axios.post(
         `https://carshopcash-production.up.railway.app/api/tables/${id}/start`
       );
       const table = response.data.table;
-
-      if (table.startTime) {
-        const startTime = new Date(table.startTime);
-        console.log(`Session started for table ${id} at:`, startTime);
-
-        setElapsedTimes((prevTimes) => ({
-          ...prevTimes,
-          [id]: "0h 0m 0s", // Initialize to 0 when starting
-        }));
-
-        clearInterval(timers[id]);
-        const intervalId = setInterval(
-          () => updateElapsedTime(id, startTime),
-          1000
-        );
-        setTimers((prevTimers) => ({
-          ...prevTimers,
-          [id]: intervalId,
-        }));
-      } else {
-        console.error(`No startTime returned for table ${id}`);
-      }
-
+  
+      // Use the current time as start time
+      const startTime = new Date();
+      console.log(`Session started for table ${id} at:`, startTime);
+  
+      // Reset elapsed time to "0h 0m 0s"
+      setElapsedTimes((prevTimes) => ({
+        ...prevTimes,
+        [id]: "0h 0m 0s", // Initialize to 0 when starting
+      }));
+  
+      // Clear any existing interval for this table
+      clearInterval(timers[id]);
+  
+      // Set new timer
+      const intervalId = setInterval(() => updateElapsedTime(id, startTime), 1000);
+      setTimers((prevTimers) => ({
+        ...prevTimers,
+        [id]: intervalId,
+      }));
+  
       fetchTables();
     } else {
       console.warn(`Invalid hourly charge for table ${id}:`, hourlyCharge);
     }
   };
-
+  
   const updateElapsedTime = (id, startTime) => {
     const now = new Date();
     const elapsedMilliseconds = now - startTime;
     const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
     const elapsedMinutes = Math.floor((elapsedMilliseconds / (1000 * 60)) % 60);
     const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
-
+  
     console.log(`Elapsed time for table ${id}: ${elapsedHours}h ${elapsedMinutes}m ${elapsedSeconds}s`);
-
+  
     setElapsedTimes((prevTimes) => ({
       ...prevTimes,
       [id]: `${elapsedHours}h ${elapsedMinutes}m ${elapsedSeconds}s`,
@@ -240,4 +238,3 @@ const TableManager = () => {
 };
 
 export default TableManager;
-
