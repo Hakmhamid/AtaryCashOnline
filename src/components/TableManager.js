@@ -14,7 +14,7 @@ const TableManager = () => {
   }, []);
 
   const fetchTables = async () => {
-    const response = await axios.get("http://localhost:5000/api/tables");
+    const response = await axios.get("carshopcash-production.up.railway.app/api/tables");
     setTables(response.data);
   };
 
@@ -30,7 +30,7 @@ const TableManager = () => {
 
     if (hourlyCharge >= 0) {
       const response = await axios.post(
-        `http://localhost:5000/api/tables/${id}/start`
+        `carshopcash-production.up.railway.app/api/tables/${id}/start`
       );
       const table = response.data.table;
 
@@ -69,7 +69,7 @@ const TableManager = () => {
     const hourlyCharge = parseFloat(charges[id]) || 0;
 
     const response = await axios.post(
-      `http://localhost:5000/api/tables/${id}/end`
+      `carshopcash-production.up.railway.app/api/tables/${id}/end`
     );
     const totalCharge =
       hourlyCharge > 0
@@ -95,7 +95,7 @@ const TableManager = () => {
 
   const resetCharge = async (id) => {
     const response = await axios.post(
-      `http://localhost:5000/api/tables/${id}/reset`
+      `carshopcash-production.up.railway.app/api/tables/${id}/reset`
     );
     const table = response.data.table;
 
