@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import "./TableManager.css"; // Uncomment if you have custom styles
 
@@ -49,6 +49,20 @@ const TableManager = () => {
     localStorage.setItem('startTimes', JSON.stringify(startTimes));
   }, [startTimes]);
 
+  const updateElapsedTime = useCallback((id) => {
+    const now = new Date();
+    const startTime = new Date(startTimes[id]);
+    const elapsedMilliseconds = now - startTime;
+    const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
+    const elapsedMinutes = Math.floor((elapsedMilliseconds / (1000 * 60)) % 60);
+    const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
+
+    setElapsedTimes((prevTimes) => ({
+      ...prevTimes,
+      [id]: `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`,
+    }));
+  }, [startTimes]);
+
   useEffect(() => {
     const intervalId = setInterval(() => {
       Object.keys(startTimes).forEach((id) => {
@@ -59,7 +73,7 @@ const TableManager = () => {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [startTimes]);
+  }, [startTimes, updateElapsedTime]);
 
   const fetchTables = async () => {
     const response = await axios.get("https://carshopcash-production.up.railway.app/api/tables");
@@ -95,20 +109,6 @@ const TableManager = () => {
     } else {
       console.warn(`Invalid hourly charge for table ${id}:`, hourlyCharge);
     }
-  };
-
-  const updateElapsedTime = (id) => {
-    const now = new Date();
-    const startTime = new Date(startTimes[id]);
-    const elapsedMilliseconds = now - startTime;
-    const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
-    const elapsedMinutes = Math.floor((elapsedMilliseconds / (1000 * 60)) % 60);
-    const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
-
-    setElapsedTimes((prevTimes) => ({
-      ...prevTimes,
-      [id]: `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`,
-    }));
   };
 
   const endSession = async (id) => {
@@ -271,4 +271,3 @@ const TableManager = () => {
 };
 
 export default TableManager;
-
