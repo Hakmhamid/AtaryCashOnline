@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback} from "react";
 import axios from "axios";
 import "./TableManager.css"; // Uncomment if you have custom styles
 
@@ -61,33 +61,43 @@ const TableManager = () => {
     setTables(response.data);
   };
 
-  const updateElapsedTimeFardi = (id) => {
-    if (!isRunningFardi[id]) return elapsedTimesFardi[id] || "0:0:0s"; // Return current elapsed time if not running
+  const updateElapsedTimeFardi = useCallback(
+    (id) => {
+      if (!isRunningFardi[id]) return elapsedTimesFardi[id] || "0:0:0s"; // Return current elapsed time if not running
 
-    const now = new Date();
-    const startTime = new Date(startTimesFardi[id]);
-    const elapsedMilliseconds = now - startTime;
+      const now = new Date();
+      const startTime = new Date(startTimesFardi[id]);
+      const elapsedMilliseconds = now - startTime;
 
-    const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
-    const elapsedMinutes = Math.floor((elapsedMilliseconds / (1000 * 60)) % 60);
-    const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
+      const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
+      const elapsedMinutes = Math.floor(
+        (elapsedMilliseconds / (1000 * 60)) % 60
+      );
+      const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
 
-    return `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`;
-  };
+      return `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`;
+    },
+    [elapsedTimesFardi, isRunningFardi, startTimesFardi]
+  );
 
-  const updateElapsedTimeZauji = (id) => {
-    if (!isRunningZauji[id]) return elapsedTimesZauji[id] || "0:0:0s"; // Return current elapsed time if not running
+  const updateElapsedTimeZauji = useCallback(
+    (id) => {
+      if (!isRunningZauji[id]) return elapsedTimesZauji[id] || "0:0:0s"; // Return current elapsed time if not running
 
-    const now = new Date();
-    const startTime = new Date(startTimesZauji[id]);
-    const elapsedMilliseconds = now - startTime;
+      const now = new Date();
+      const startTime = new Date(startTimesZauji[id]);
+      const elapsedMilliseconds = now - startTime;
 
-    const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
-    const elapsedMinutes = Math.floor((elapsedMilliseconds / (1000 * 60)) % 60);
-    const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
+      const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
+      const elapsedMinutes = Math.floor(
+        (elapsedMilliseconds / (1000 * 60)) % 60
+      );
+      const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
 
-    return `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`;
-  };
+      return `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`;
+    },
+    [elapsedTimesZauji, isRunningZauji, startTimesZauji]
+  );
 
   // UseEffect for فەردی mode time tracking
   useEffect(() => {
@@ -103,7 +113,7 @@ const TableManager = () => {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [startTimesFardi, isRunningFardi]);
+  }, [startTimesFardi, isRunningFardi, updateElapsedTimeFardi ]);
 
   // UseEffect for زەوجی mode time tracking
   useEffect(() => {
@@ -119,7 +129,7 @@ const TableManager = () => {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [startTimesZauji, isRunningZauji]);
+  }, [startTimesZauji, isRunningZauji, updateElapsedTimeZauji]);
 
   // Starting session functions
   const startSessionFardi = (id) => {
