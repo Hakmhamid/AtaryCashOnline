@@ -268,9 +268,6 @@ const TableManager = () => {
             onChange={(e) => setSelectedZaujiPrice(e.target.value)}
             className="border border-gray-300 font-semibold rounded px-2 py-2 w-full sm:w-[200px] font-nrt"
           >
-            <option value="0" disabled>
-              نرخێک دابنێ
-            </option>
             <option value="3000">3000</option>
             <option value="3500">3500</option>
             <option value="4000">4000</option>
