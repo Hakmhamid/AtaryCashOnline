@@ -1,269 +1,403 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./TableManager.css"; // Uncomment if you have custom styles
 
 const TableManager = () => {
   const [tables, setTables] = useState([]);
-  const [elapsedTimes, setElapsedTimes] = useState(() => {
-    const savedElapsedTimes = localStorage.getItem('elapsedTimes');
-    return savedElapsedTimes ? JSON.parse(savedElapsedTimes) : {};
-  });
-  const [startTimes, setStartTimes] = useState(() => {
-    const savedStartTimes = localStorage.getItem('startTimes');
+  const [mode, setMode] = useState({});
+
+  // Initialize states for فەردی mode
+  const [startTimesFardi, setStartTimesFardi] = useState(() => {
+    const savedStartTimes = localStorage.getItem("startTimesFardi");
     return savedStartTimes ? JSON.parse(savedStartTimes) : {};
   });
-  const [charges, setCharges] = useState(() => {
-    const savedCharges = localStorage.getItem('charges');
-    return savedCharges ? JSON.parse(savedCharges) : {};
+  const [elapsedTimesFardi, setElapsedTimesFardi] = useState(() => {
+    const savedElapsedTimes = localStorage.getItem("elapsedTimesFardi");
+    return savedElapsedTimes ? JSON.parse(savedElapsedTimes) : {};
   });
-  const [totalCharges, setTotalCharges] = useState(() => {
-    const savedTotalCharges = localStorage.getItem('totalCharges');
-    return savedTotalCharges ? JSON.parse(savedTotalCharges) : {};
+  const [isRunningFardi, setIsRunningFardi] = useState(() => {
+    const savedRunningStatus = localStorage.getItem("isRunningFardi");
+    return savedRunningStatus ? JSON.parse(savedRunningStatus) : {};
   });
-  const [sessionEnded, setSessionEnded] = useState(() => {
-    const savedSessionEnded = localStorage.getItem('sessionEnded');
-    return savedSessionEnded ? JSON.parse(savedSessionEnded) : {};
+
+  // Initialize states for زەوجی mode
+  const [startTimesZauji, setStartTimesZauji] = useState(() => {
+    const savedStartTimes = localStorage.getItem("startTimesZauji");
+    return savedStartTimes ? JSON.parse(savedStartTimes) : {};
   });
+  const [elapsedTimesZauji, setElapsedTimesZauji] = useState(() => {
+    const savedElapsedTimes = localStorage.getItem("elapsedTimesZauji");
+    return savedElapsedTimes ? JSON.parse(savedElapsedTimes) : {};
+  });
+  const [isRunningZauji, setIsRunningZauji] = useState(() => {
+    const savedRunningStatus = localStorage.getItem("isRunningZauji");
+    return savedRunningStatus ? JSON.parse(savedRunningStatus) : {};
+  });
+
+  // State for prices
+  const [fardiPrice, setFardiPrice] = useState(() => {
+    return localStorage.getItem("fardiPrice")
+      ? parseInt(localStorage.getItem("fardiPrice"))
+      : 0;
+  });
+  const [zaujiPrice, setZaujiPrice] = useState(() => {
+    return localStorage.getItem("zaujiPrice")
+      ? parseInt(localStorage.getItem("zaujiPrice"))
+      : 0;
+  });
+
+  // Price selection state
+  const [selectedFardiPrice, setSelectedFardiPrice] = useState(fardiPrice);
+  const [selectedZaujiPrice, setSelectedZaujiPrice] = useState(zaujiPrice);
 
   useEffect(() => {
     fetchTables();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('charges', JSON.stringify(charges));
-  }, [charges]);
+  const fetchTables = async () => {
+    const response = await axios.get(
+      "https://carshopcash-production.up.railway.app/api/tables"
+    );
+    setTables(response.data);
+  };
 
-  useEffect(() => {
-    localStorage.setItem('totalCharges', JSON.stringify(totalCharges));
-  }, [totalCharges]);
+  const updateElapsedTimeFardi = (id) => {
+    if (!isRunningFardi[id]) return elapsedTimesFardi[id] || "0:0:0s"; // Return current elapsed time if not running
 
-  useEffect(() => {
-    localStorage.setItem('sessionEnded', JSON.stringify(sessionEnded));
-  }, [sessionEnded]);
-
-  useEffect(() => {
-    localStorage.setItem('elapsedTimes', JSON.stringify(elapsedTimes));
-  }, [elapsedTimes]);
-
-  useEffect(() => {
-    localStorage.setItem('startTimes', JSON.stringify(startTimes));
-  }, [startTimes]);
-
-  const updateElapsedTime = useCallback((id) => {
     const now = new Date();
-    const startTime = new Date(startTimes[id]);
+    const startTime = new Date(startTimesFardi[id]);
     const elapsedMilliseconds = now - startTime;
+
     const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
     const elapsedMinutes = Math.floor((elapsedMilliseconds / (1000 * 60)) % 60);
     const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
 
-    setElapsedTimes((prevTimes) => ({
-      ...prevTimes,
-      [id]: `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`,
-    }));
-  }, [startTimes]);
+    return `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`;
+  };
 
+  const updateElapsedTimeZauji = (id) => {
+    if (!isRunningZauji[id]) return elapsedTimesZauji[id] || "0:0:0s"; // Return current elapsed time if not running
+
+    const now = new Date();
+    const startTime = new Date(startTimesZauji[id]);
+    const elapsedMilliseconds = now - startTime;
+
+    const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
+    const elapsedMinutes = Math.floor((elapsedMilliseconds / (1000 * 60)) % 60);
+    const elapsedSeconds = Math.floor((elapsedMilliseconds / 1000) % 60);
+
+    return `${elapsedHours}:${elapsedMinutes}:${elapsedSeconds}s`;
+  };
+
+  // UseEffect for فەردی mode time tracking
   useEffect(() => {
     const intervalId = setInterval(() => {
-      Object.keys(startTimes).forEach((id) => {
-        if (startTimes[id]) {
-          updateElapsedTime(id);
-        }
+      const newElapsedTimesFardi = {};
+
+      // Update elapsed times for فەردی
+      Object.keys(startTimesFardi).forEach((id) => {
+        newElapsedTimesFardi[id] = updateElapsedTimeFardi(id);
       });
+
+      setElapsedTimesFardi(newElapsedTimesFardi);
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [startTimes, updateElapsedTime]);
+  }, [startTimesFardi, isRunningFardi]);
 
-  const fetchTables = async () => {
-    const response = await axios.get("https://carshopcash-production.up.railway.app/api/tables");
-    setTables(response.data);
+  // UseEffect for زەوجی mode time tracking
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const newElapsedTimesZauji = {};
+
+      // Update elapsed times for زەوجی
+      Object.keys(startTimesZauji).forEach((id) => {
+        newElapsedTimesZauji[id] = updateElapsedTimeZauji(id);
+      });
+
+      setElapsedTimesZauji(newElapsedTimesZauji);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [startTimesZauji, isRunningZauji]);
+
+  // Starting session functions
+  const startSessionFardi = (id) => {
+    const startTime = new Date();
+    setStartTimesFardi((prev) => ({ ...prev, [id]: startTime }));
+    setIsRunningFardi((prev) => ({ ...prev, [id]: true }));
   };
 
-  const handleChargeChange = (id, value) => {
-    setCharges((prevCharges) => ({
-      ...prevCharges,
-      [id]: value,
-    }));
+  const startSessionZauji = (id) => {
+    const startTime = new Date();
+    setStartTimesZauji((prev) => ({ ...prev, [id]: startTime }));
+    setIsRunningZauji((prev) => ({ ...prev, [id]: true }));
   };
 
-  const startSession = async (id) => {
-    const hourlyCharge = parseFloat(charges[id]) || 0;
-
-    if (hourlyCharge >= 0) {
-      await axios.post(`https://carshopcash-production.up.railway.app/api/tables/${id}/start`);
-      const startTime = new Date();
-      setStartTimes((prev) => ({ ...prev, [id]: startTime }));
-      setElapsedTimes((prevTimes) => ({
-        ...prevTimes,
-        [id]: "0:0:0s",
-      }));
-
-      // Reset sessionEnded when starting the session
-      setSessionEnded((prevSessionEnded) => ({
-        ...prevSessionEnded,
-        [id]: false,
-      }));
-
-      fetchTables();
-    } else {
-      console.warn(`Invalid hourly charge for table ${id}:`, hourlyCharge);
-    }
-  };
-
-  const endSession = async (id) => {
-    const hourlyCharge = parseFloat(charges[id]) || 0;
-
-    const response = await axios.post(
-      `https://carshopcash-production.up.railway.app/api/tables/${id}/end`
-    );
-    const totalCharge =
-      hourlyCharge > 0
-        ? Math.round((response.data.totalCharge / 3) * hourlyCharge)
-        : 0;
-
-    setTotalCharges((prevCharges) => ({
-      ...prevCharges,
-      [id]: totalCharge,
-    }));
-
-    setElapsedTimes((prevTimes) => ({
+  // Clear and end session functions for فەردی
+  const clearSessionFardi = (id) => {
+    setStartTimesFardi((prev) => ({ ...prev, [id]: null }));
+    setElapsedTimesFardi((prevTimes) => ({
       ...prevTimes,
-      [id]: null,
+      [id]: "0:0:0s",
     }));
-
-    setStartTimes((prev) => ({ ...prev, [id]: null }));
-
-    // Mark the session as ended
-    setSessionEnded((prevSessionEnded) => ({
-      ...prevSessionEnded,
-      [id]: true,
-    }));
-
-    fetchTables();
+    setIsRunningFardi((prev) => ({ ...prev, [id]: false }));
   };
 
-  const resetCharge = async (id) => {
-    const response = await axios.post(
-      `https://carshopcash-production.up.railway.app/api/tables/${id}/reset`
-    );
-    const table = response.data.table;
+  const endSessionFardi = (id) => {
+    setIsRunningFardi((prev) => ({ ...prev, [id]: false }));
+  };
 
-    setTotalCharges((prevCharges) => ({
-      ...prevCharges,
-      [id]: table.totalCharge,
-    }));
-
-    setCharges((prevCharges) => ({
-      ...prevCharges,
-      [id]: "",
-    }));
-
-    setElapsedTimes((prevTimes) => ({
+  // Clear and end session functions for زەوجی
+  const clearSessionZauji = (id) => {
+    setStartTimesZauji((prev) => ({ ...prev, [id]: null }));
+    setElapsedTimesZauji((prevTimes) => ({
       ...prevTimes,
-      [id]: null,
+      [id]: "0:0:0s",
     }));
-
-    setStartTimes((prev) => ({ ...prev, [id]: null }));
-
-    // Reset the sessionEnded flag
-    setSessionEnded((prevSessionEnded) => ({
-      ...prevSessionEnded,
-      [id]: false,
-    }));
-
-    fetchTables();
+    setIsRunningZauji((prev) => ({ ...prev, [id]: false }));
   };
 
-  const formatCharge = (charge) => {
-    return convertToArabicNumerals(String(charge).padStart(5, "0"));
+  const endSessionZauji = (id) => {
+    setIsRunningZauji((prev) => ({ ...prev, [id]: false }));
   };
 
-  const convertToArabicNumerals = (num) => {
-    const arabicNumerals = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
-    return String(num)
-      .split('')
-      .map(digit => arabicNumerals[parseInt(digit, 10)])
-      .join('');
+  const resumeSessionZauji = (id) => {
+    const now = new Date();
+    const currentElapsedTime = elapsedTimesZauji[id] || "0:0:0s";
+
+    const [hours, minutes, seconds] = currentElapsedTime
+      .split(":")
+      .map((time) => parseInt(time, 10));
+
+    const totalElapsedSeconds = hours * 3600 + minutes * 60 + seconds;
+    const newStartTime = new Date(now.getTime() - totalElapsedSeconds * 1000);
+
+    setStartTimesZauji((prev) => ({ ...prev, [id]: newStartTime }));
+    setIsRunningZauji((prev) => ({ ...prev, [id]: true }));
+  };
+
+  // Persisting to localStorage for فەردی and زەوجی
+  useEffect(() => {
+    localStorage.setItem("startTimesFardi", JSON.stringify(startTimesFardi));
+    localStorage.setItem(
+      "elapsedTimesFardi",
+      JSON.stringify(elapsedTimesFardi)
+    );
+    localStorage.setItem("isRunningFardi", JSON.stringify(isRunningFardi));
+    localStorage.setItem("startTimesZauji", JSON.stringify(startTimesZauji));
+    localStorage.setItem(
+      "elapsedTimesZauji",
+      JSON.stringify(elapsedTimesZauji)
+    );
+    localStorage.setItem("isRunningZauji", JSON.stringify(isRunningZauji));
+  }, [
+    startTimesFardi,
+    elapsedTimesFardi,
+    isRunningFardi,
+    startTimesZauji,
+    elapsedTimesZauji,
+    isRunningZauji,
+  ]);
+
+  const resumeSessionFardi = (id) => {
+    const now = new Date();
+    const elapsedTime = elapsedTimesFardi[id] || "0:0:0s";
+    const [hours, minutes, seconds] = elapsedTime
+      .split(":")
+      .map((time) => parseInt(time, 10));
+
+    const totalElapsedSeconds = hours * 3600 + minutes * 60 + seconds;
+    const newStartTime = new Date(now.getTime() - totalElapsedSeconds * 1000);
+
+    setStartTimesFardi((prev) => ({ ...prev, [id]: newStartTime }));
+    setIsRunningFardi((prev) => ({ ...prev, [id]: true }));
+  };
+
+  const applyFardiPrice = () => {
+    setFardiPrice(selectedFardiPrice);
+    localStorage.setItem("fardiPrice", selectedFardiPrice);
+  };
+
+  const applyZaujiPrice = () => {
+    setZaujiPrice(selectedZaujiPrice);
+    localStorage.setItem("zaujiPrice", selectedZaujiPrice);
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-8xl mb-12 underline text-center font-k24kurdish mt-14 font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+    <div className="container mx-auto">
+      <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl mb-6 sm:mb-8 md:mb-10 lg:mb-12 underline text-center font-k24kurdish mt-2 font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
         گەیم سەنتەری ئەتاری
       </h1>
-      <hr className="mb-12"/>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      <hr className="mb-12" />
+
+      {/* Price Selection Dropdowns */}
+      <div className="flex flex-col sm:flex-row justify-center w-full gap-4 mb-6">
+        <div className="flex items-center justify-center sm:justify-start">
+          <select
+            value={selectedFardiPrice}
+            onChange={(e) => setSelectedFardiPrice(e.target.value)}
+            className="border border-gray-300 font-semibold rounded px-2 py-2 w-full sm:w-[200px] font-nrt"
+          >
+            <option value="3000">3000</option>
+            <option value="3500">3500</option>
+            <option value="4000">4000</option>
+          </select>
+          <button
+            onClick={applyFardiPrice}
+            className="bg-cyan-600 text-white border border-gray-500 rounded px-4 py-2 ml-0 sm:ml-2 mt-2 sm:mt-0 font-k24kurdish"
+          >
+            فەردی
+          </button>
+        </div>
+
+        <div className="flex items-center justify-center sm:justify-start">
+          <select
+            value={selectedZaujiPrice}
+            onChange={(e) => setSelectedZaujiPrice(e.target.value)}
+            className="border border-gray-300 font-semibold rounded px-2 py-2 w-full sm:w-[200px] font-nrt"
+          >
+            <option value="0" disabled>
+              نرخێک دابنێ
+            </option>
+            <option value="3000">3000</option>
+            <option value="3500">3500</option>
+            <option value="4000">4000</option>
+          </select>
+          <button
+            onClick={applyZaujiPrice}
+            className="bg-cyan-600 text-white rounded px-4 py-2 ml-0 sm:ml-2 mt-2 sm:mt-0 font-k24kurdish"
+          >
+            زەوجی
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {tables.map((table) => (
           <div
             key={table.id}
-            className="bg-white p-4 rounded-lg shadow-md border border-slate-400 font-roboto font-bold"
+            className="bg-white pt-4 rounded-lg shadow-md border border-slate-400 font-roboto font-bold"
           >
-            <h2 className="text-4xl text-center text-purple-600 font-k24kurdish underline underline-offset-8 pb-3">
-              مێزی {table.id}
-            </h2>
-
-            <div className="flex text-right justify-end gap-3">
-              <p
-                className={`font-nrt text-2xl ${table.inUse ? "text-red-500" : "text-emerald-500"}`}
-              >
-                {table.inUse ? "لە بەکارهێنانایە" : "بەردەستە"}
-              </p>
-              <p className="text-sky-600 font-k24kurdish text-2xl"> :دۆخ</p>
+            <div className="flex justify-center pb-2">
+              <h2 className="text-4xl text-center bg-gray-800 text-red-500 align-middle border w-12 font-k24kurdish rounded-md">
+                {table.id}
+              </h2>
             </div>
 
-            <div className="flex justify-end text-right gap-3">
-              <p className="font-nrt text-xl">
-                {totalCharges[table.id] !== undefined
-                  ? `  ${formatCharge(totalCharges[table.id])} دینار`
-                  : "٠"}{" "}
-              </p>
-              <span className="font-k24kurdish text-cyan-500 text-2xl font-bold">: کۆی گشتی پارە</span>
-            </div>
-
-            <div className="mb-4">
-              <h3 className="text-2xl mb-2 text-right font-k24kurdish text-blue-600">: کات</h3>
-              <input
-                type="number"
-                dir="rtl"
-                className="border rounded w-full py-2 px-3 text-gray-700 font-nrt text-right"
-                value={charges[table.id] || ""}
-                onChange={(e) => handleChargeChange(table.id, e.target.value)}
-                placeholder="نرخێک دابنێ بە پێی کاتژمێرێک"
-                min="0"
-                disabled={table.inUse}
-              />
-            </div>
-            {table.inUse ? (
-              <div className="mt-4 flex flex-col items-end">
-                <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 text-center w-full">
-                <h3 className="text-lg font-k24kurdish">کاتژمێر</h3>
-                  <p className="text-2xl font-bold text-blue-500">{elapsedTimes[table.id] || "0:0:0s"}</p>
-                </div>
-                <button
-                  onClick={() => endSession(table.id)}
-                  className="bg-red-500 text-white px-4 py-2 mt-4 rounded self-end font-k24kurdish w-full"
-                >
-                  وەستاندنی کات
-                </button>
-              </div>
-            ) : (
+            <div className="flex gap-4 justify-center">
               <button
-                onClick={() => startSession(table.id)}
-                className="bg-blue-500 text-white px-4 py-2 rounded w-full font-k24kurdish"
+                onClick={() =>
+                  setMode((prev) => ({ ...prev, [table.id]: "فەردی" }))
+                }
+                className={`border-2 border-indigo-600 rounded-md px-4 py-2 font-k24kurdish ${
+                  mode[table.id] === "فەردی" ? "bg-blue-500 text-white" : ""
+                }`}
               >
-                دەست پێکردن
-
+                فەردی
               </button>
-            )}
+              <button
+                onClick={() =>
+                  setMode((prev) => ({ ...prev, [table.id]: "زەوجی" }))
+                }
+                className={`border-2 border-indigo-600 rounded px-4 py-2 font-k24kurdish ${
+                  mode[table.id] === "زەوجی" ? "bg-blue-500 text-white" : ""
+                }`}
+              >
+                زەوجی
+              </button>
+            </div>
 
-            <button
-              onClick={() => resetCharge(table.id)}
-              className="bg-green-500 text-white px-4 py-2 rounded mt-4 w-full font-k24kurdish"
-              disabled={!sessionEnded[table.id]}  // Disable if session is not ended
-            >
-             پاککردنەوەی پارەی
-            </button>
+            <div className="flex flex-col mt-4">
+              {mode[table.id] === "فەردی" ? (
+                <>
+                  <p className="text-right pr-2 font-k24kurdish text-2xl text-sky-500 mb-2">
+                    {fardiPrice} : نرخ
+                  </p>
+                  <div className="bg-gray-100 border border-gray-300 rounded-lg text-center w-full h-full">
+                    <p className="text-5xl font-bold text-blue-500 pt-4">
+                      {elapsedTimesFardi[table.id] || "0:0:0s"}
+                    </p>
+                    <div className="mt-4 flex">
+                      {isRunningFardi[table.id] ? (
+                        <button
+                          onClick={() => endSessionFardi(table.id)}
+                          className="bg-yellow-500 text-white rounded px-4 py-2 w-full h-auto text-xl"
+                        >
+                          Stop
+                        </button>
+                      ) : startTimesFardi[table.id] ? (
+                        <>
+                          <button
+                            onClick={() => clearSessionFardi(table.id)}
+                            className="bg-red-500 text-white px-4 py-2 w-1/2 h-auto"
+                          >
+                            Clear
+                          </button>
+                          <button
+                            onClick={() => resumeSessionFardi(table.id)}
+                            className="bg-blue-500 text-white px-4 py-2 w-1/2 h-auto"
+                          >
+                            Resume
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => startSessionFardi(table.id)}
+                          className="bg-green-500 text-white rounded px-4 py-2 w-full h-auto text-xl"
+                        >
+                          Start
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : mode[table.id] === "زەوجی" ? (
+                <>
+                  <p className="text-right pr-2 font-k24kurdish text-2xl text-sky-500 mb-2">
+                    {zaujiPrice} : نرخ
+                  </p>
+                  <div className="bg-gray-100 border border-gray-300 rounded-lg text-center w-full h-full">
+                    <p className="text-5xl font-bold text-blue-500 pt-4">
+                      {elapsedTimesZauji[table.id] || "0:0:0s"}
+                    </p>
+                    <div className="mt-4 flex">
+                      {isRunningZauji[table.id] ? (
+                        <button
+                          onClick={() => endSessionZauji(table.id)}
+                          className="bg-yellow-500 text-white rounded px-4 py-2 w-full h-auto text-xl"
+                        >
+                          Stop
+                        </button>
+                      ) : startTimesZauji[table.id] ? (
+                        <>
+                          <button
+                            onClick={() => clearSessionZauji(table.id)}
+                            className="bg-red-500 text-white rounded px-4 py-2 w-1/2 h-auto"
+                          >
+                            Clear
+                          </button>
+                          <button
+                            onClick={() => resumeSessionZauji(table.id)}
+                            className="bg-blue-500 text-white rounded px-4 py-2 w-1/2 h-auto"
+                          >
+                            Resume
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => startSessionZauji(table.id)}
+                          className="bg-green-500 text-white rounded px-4 py-2 w-full h-auto text-xl"
+                        >
+                          Start
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : null}
+            </div>
           </div>
         ))}
       </div>
