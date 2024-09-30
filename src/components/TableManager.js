@@ -277,7 +277,7 @@ const TableManager = () => {
           گەیم سەنتەری ئەتاری
         </h1>
       </div>
-      <div className="bg-gradient-to-r from bg-gray-400 to-gray-600">
+      <div className="bg-gradient-to-r from bg-gray-400 to-gray-600 ">
         <hr className="mb-12" />
         <div className="container mx-auto">
 
