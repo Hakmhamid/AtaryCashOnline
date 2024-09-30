@@ -307,8 +307,8 @@ const TableManager = () => {
               onChange={(e) => setSelectedZaujiPrice(parseInt(e.target.value))}
               className="border border-gray-300 font-semibold rounded px-2 py-2 w-full sm:w-[200px] font-nrt"
             >
-              <option value="3000">6000</option>
-              <option value="3500">7000</option>
+              <option value="6000">6000</option>
+              <option value="7000">7000</option>
             </select>
             <button
               onClick={applyZaujiPrice}
