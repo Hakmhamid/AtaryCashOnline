@@ -373,7 +373,7 @@ const TableManager = () => {
                     <button
                       onClick={() => {
                         // Update mode and start session
-                        // setMode((prev) => ({ ...prev, [table.id]: null }));
+                        setMode((prev) => ({ ...prev, [table.id]: null }));
                       }}
                       className="border-2 border-indigo-600 bg-blue-500 text-white text-xl rounded-md px-4 py-2 font-k24kurdish w-full"
                     >
@@ -385,7 +385,7 @@ const TableManager = () => {
                     <button
                       onClick={() => {
                         // Update mode and start session
-                        // setMode((prev) => ({ ...prev, [table.id]: null }));
+                        setMode((prev) => ({ ...prev, [table.id]: null }));
                       }}
                       className="border-2 border-indigo-600 bg-gradient-to-r from-emerald-600 to-lime-600 text-white text-xl rounded-md px-4 py-2 font-k24kurdish w-full"
                     >
