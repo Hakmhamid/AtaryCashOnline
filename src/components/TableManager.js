@@ -67,7 +67,7 @@ const TableManager = () => {
 
   const fetchTables = async () => {
     const response = await axios.get(
-      "https://carshopcash-production.up.railway.app/api/tables"
+      "https://yabbering-gilly-hakm-freelancer-webdevelopment-46e7d903.koyeb.app/api/tables"
     );
     setTables(response.data);
   };
