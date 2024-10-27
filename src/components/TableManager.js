@@ -67,7 +67,7 @@ const TableManager = () => {
 
   const fetchTables = async () => {
     const response = await axios.get(
-      "https://yabbering-gilly-hakm-freelancer-webdevelopment-46e7d903.koyeb.app/api/tables"
+      "https://app-wispy-snow-9664.fly.dev/api/tables"
     );
     setTables(response.data);
   };
